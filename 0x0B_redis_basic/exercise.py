@@ -2,6 +2,9 @@
 """exercise"""
 import redis
 from uuid import uuid4
+from typing import Union
+
+Types = Union[str, bytes, int, float]
 
 
 class Cache:
@@ -10,7 +13,7 @@ class Cache:
         self._redis = redis.Redis()
         self._redis.flushdb()
 
-    def store(self, data) -> str:
+    def store(self, data: Types) -> str:
         """Store the input data in Redis"""
         key = str(uuid4())
         self._redis.mset({key: data})
