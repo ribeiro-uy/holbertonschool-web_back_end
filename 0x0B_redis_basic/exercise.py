@@ -1,9 +1,21 @@
 #!/usr/bin/env python3
 """exercise"""
 import redis
-from uuid import uuid4
+from functools import wraps
 from typing import Union, Optional, Callable
+from uuid import uuid4
 TYPES = Union[str, bytes, int, float]
+
+
+def count_calls(method: Callable) -> Callable:
+    """Count how many times methods are called"""
+    @wraps(method)
+    def timesCalled(self, *args, **kwds):
+        """ Increments method call counter """
+        key = method.__qualname__
+        self._redis.incr(key)
+        return method(self, *args, **kwds)
+    return timesCalled
 
 
 class Cache:
@@ -12,6 +24,7 @@ class Cache:
         self._redis = redis.Redis()
         self._redis.flushdb()
 
+    @count_calls
     def store(self, data: TYPES) -> str:
         """Store the input data in Redis"""
         key = str(uuid4())
