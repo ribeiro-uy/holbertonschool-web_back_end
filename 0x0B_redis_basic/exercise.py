@@ -48,6 +48,8 @@ def replay(method: Callable):
 
 
 class Cache:
+    """Cache class"""
+
     def __init__(self):
         """Constructor"""
         self._redis = redis.Redis()
