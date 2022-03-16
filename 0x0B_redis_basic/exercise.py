@@ -11,11 +11,25 @@ def count_calls(method: Callable) -> Callable:
     """Count how many times methods are called"""
     @wraps(method)
     def timesCalled(self, *args, **kwds):
-        """ Increments method call counter """
+        """Increments method call counter"""
         key = method.__qualname__
         self._redis.incr(key)
         return method(self, *args, **kwds)
     return timesCalled
+
+
+def call_history(method: Callable) -> Callable:
+    """Store the history of inputs and outputs"""
+    @wraps(method)
+    def history(self, *args, **kwds):
+        """Increments history call method"""
+        inputs = method.__qualname__ + ":inputs"
+        outputs = method.__qualname__ + ":outputs"
+        self._redis.rpush(inputs, str(args))
+        output = method(self, *args, **kwds)
+        self._redis.rpush(outputs, output)
+        return output
+    return history
 
 
 class Cache:
@@ -25,6 +39,7 @@ class Cache:
         self._redis.flushdb()
 
     @count_calls
+    @call_history
     def store(self, data: TYPES) -> str:
         """Store the input data in Redis"""
         key = str(uuid4())
